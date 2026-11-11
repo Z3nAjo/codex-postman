@@ -1,0 +1,9 @@
+{
+  "name": "Demo",
+  "variables": {
+    "baseUrl": "https://jsonplaceholder.typicode.com",
+    "token": "",
+    "username": "",
+    "password": ""
+  }
+}

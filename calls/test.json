@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "test",
+  "method": "GET",
+  "url": "{{baseUrl}}/",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "",
+  "variables": {},
+  "auth": {
+    "type": "none",
+    "values": {}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "name": "test_copy coucou",
+  "method": "GET",
+  "url": "{{baseUrl}}/posts/:id",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "",
+  "variables": {
+    "id": "1"
+  },
+  "auth": {
+    "type": "none",
+    "values": {}
+  }
+}

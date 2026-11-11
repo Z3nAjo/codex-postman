@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Request Lab</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<body>
+  <aside>
+    <a class="brand" href="/"><span class="logo">↗</span> Request Lab</a>
+    <div class="sidebar-label">API CLIENT <span>LOCAL</span></div>
+    <details class="quick-requests" open><summary>Quick requests</summary><nav id="presets"></nav></details>
+    <details class="sidebar-library" open><summary>Library</summary><div id="savedCallsPanel"><div class="saved-toolbar"><button id="newCall" class="text-button">+ New request</button><button id="importCall" class="text-button">Import JSON</button><button id="exportLibrary" class="text-button" type="button">Export all</button></div><input type="file" id="callFile" accept=".json,application/json" hidden><div id="savedCalls"></div></div></details>
+    <details id="environmentSection" class="sidebar-environments" open><summary>Environment</summary>
+      <div id="environmentWorkspace">
+      <label class="active-environment-label" for="activeEnvironment">Active environment</label><div class="active-environment-row"><div class="active-environment-select"><select id="activeEnvironment" aria-label="Active environment"></select></div><button id="expandEnvironment" class="text-button expand-environment-icon" type="button" aria-label="Open full-screen environment editor" aria-haspopup="dialog" title="Open full-screen environment editor"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><path d="m3 3 6 6m12-6-6 6M3 21l6-6m12 6-6-6"/></svg></button></div>
+      <div class="environment-export-row"><button id="exportAllEnvironments" class="text-button" type="button">Export all</button></div>
+      <div id="environmentPanel" class="sidebar-environment">
+        <form id="newEnvironmentForm" class="new-environment-form" hidden>
+          <label for="newEnvironmentName">Environment name</label>
+          <div class="new-environment-name"><input id="newEnvironmentName" class="environment-label" placeholder="Environment name" maxlength="100" autocomplete="off"><button id="confirmNewEnvironment" type="submit" class="confirm-environment" aria-label="Create environment" title="Create environment"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button><button id="cancelNewEnvironment" type="button" class="text-button" aria-label="Cancel environment creation" title="Cancel">✕</button></div>
+          <p id="newEnvironmentError" class="storage-warning" role="alert" hidden></p>
+        </form>
+        <details id="environmentDetails" class="environment-settings">
+        <summary>Environment settings</summary>
+        <div class="environment-settings-imports"><button type="button" id="importEnvironment" class="text-button">Import JSON</button><button type="button" id="exportEnvironment" class="text-button">Export JSON</button></div>
+        <div class="environment-actions"><button id="newEnvironment" class="text-button" type="button">+ New</button><button id="duplicateEnvironment" class="text-button" type="button">Duplicate</button><button id="deleteEnvironment" class="text-button delete-call" type="button">Delete</button><button id="refreshEnvironments" class="text-button" type="button">Refresh</button></div>
+        <label for="environmentLabel" class="environment-name-label">Environment name</label><input id="environmentLabel" class="environment-label" placeholder="Environment name" aria-label="Environment name">
+        <div class="variable-heading"><h3>Variables</h3><button type="button" id="addVariable" class="text-button">+ Add variable</button></div>
+        <div class="variable-scroll"><table class="variable-table"><thead><tr><th>Key</th><th>Type</th><th>Value</th><th>Actions</th></tr></thead><tbody id="variableRows"></tbody></table></div>
+        <p id="environmentStorageWarnings" class="storage-warning" role="alert" hidden></p><p id="environmentError" role="alert" hidden></p>
+        <details><summary>Edit raw JSON</summary><label for="environment" class="hint">Editing JSON also updates the variable table.</label><textarea id="environment" spellcheck="false" rows="10"></textarea></details>
+        <details class="environment-info"><summary><span class="info-label">Show info</span></summary>
+          <p id="environmentStorage" class="hint storage-path"></p>
+          <p class="hint">Reference a value with {{key}} in a request. Changes apply immediately to the next request. Each environment has its own JSON file. Valid edits save automatically. Export the active environment or all environments. Exports include secrets.</p>
+          <p id="environmentSaveStatus" class="hint" role="status">Changes save automatically.</p>
+        </details>
+        <input type="file" id="environmentFile" accept=".json,application/json" hidden>
+        </details>
+      </div>
+      </div>
+    </details>
+    <div class="sidebar-note"><span class="dot"></span> Local API client<p>Requests run through your Node.js server. No browser CORS restrictions.</p></div>
+  </aside>
+  <dialog id="environmentFullscreen" class="environment-fullscreen" aria-labelledby="environmentFullscreenTitle">
+    <div class="environment-fullscreen-header"><div><div class="eyebrow">ENVIRONMENT SETTINGS</div><h1 id="environmentFullscreenTitle">Environments &amp; variables</h1><p>Choose an environment and edit its variables. Valid edits save automatically.</p></div><button id="closeEnvironmentFullscreen" type="button" class="return-sidebar"><span aria-hidden="true">↙</span> Back to sidebar</button></div>
+    <div id="environmentFullscreenContent"></div>
+  </dialog>
+  <main>
+    <header><div><div class="eyebrow">BUILD · SEND · EXPLORE</div><h1>Make your next request.</h1><p>Send requests and inspect API responses.</p></div><span class="badge">Node.js / local</span></header>
+
+    <section class="card request-card">
+      <div class="card-heading"><h2>Request</h2><span id="environmentName" class="environment-tag">Demo environment</span></div>
+      <div class="save-bar"><label for="callName">Request name</label><input id="callName" placeholder="e.g. Get customers" maxlength="100"><button id="saveCall" class="text-button">Save request</button><button id="exportCall" class="text-button">Export JSON</button><span id="saveStatus" role="status"></span></div>
+      <form id="requestForm"><div class="request-bar"><div class="method-select"><select id="method" aria-label="HTTP method"><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option></select></div><input id="url" aria-label="Request URL" value="{{baseUrl}}/posts/1" placeholder="https://api.example.com/resource" required><button id="send" type="submit">Send request ↗</button></div></form>
+      <div class="tabs" id="requestTabs"><button data-panel="urlVariablesPanel">URL variables</button><button class="active" data-panel="headersPanel">Headers</button><button data-panel="authPanel">Authorization</button><button data-panel="bodyPanel">Body</button></div>
+      <div id="urlVariablesPanel" class="panel" hidden><div class="field-heading"><label>Request URL variables</label><button id="addRequestVariable" class="text-button" type="button">+ Add variable</button></div><div class="request-variable-scroll"><table class="request-variable-table"><thead><tr><th>Name</th><th>Value</th><th></th></tr></thead><tbody id="requestVariableRows"></tbody></table></div><details class="request-variable-info"><summary><span class="info-label">Show info</span></summary><p id="requestVariableEmpty" class="hint">Add :VARIABLE_NAME to the URL to create a variable automatically, or click Add variable.</p><p class="hint">Use :VARIABLE_NAME in the URL, for example {{baseUrl}}/users/:USER_ID. Values are specific to this request, URL-encoded when sent, and saved with the request. Environment references such as {{userId}} work in values.</p></details></div>
+      <div id="headersPanel" class="panel"><div class="field-heading"><label for="headers">Request headers</label><span>JSON object · supports {{variables}}</span></div><textarea id="headers" spellcheck="false" rows="6">{
+  "Content-Type": "application/json"
+}</textarea></div>
+      <div id="authPanel" class="panel" hidden><div class="field-heading"><label for="authType">Authentication type</label><span>Resolved when you send</span></div><div class="auth-type-select"><select id="authType"><option value="none">No authentication</option><option value="bearer">Bearer token</option><option value="basic">Basic authentication</option><option value="apikey">API key header</option></select></div><div id="authFields"></div><p class="hint">Use variables such as {{token}} for dynamic credentials. Saved requests include the active authentication fields. Use variable references to keep secrets in your environment.</p></div>
+      <div id="bodyPanel" class="panel" hidden><div class="field-heading"><label for="body">Request body</label><span>Raw text or JSON · ignored for GET / HEAD</span></div><textarea id="body" spellcheck="false" rows="9">{
+  "title": "Hello from Request Lab",
+  "body": "My first API request",
+  "userId": 1
+}</textarea></div>
+
+    </section>
+    <section class="card response-card"><div class="card-heading"><h2>Response</h2><div id="responseMeta"></div></div><div class="tabs" id="responseTabs"><button class="active" data-view="body">Body</button><button data-view="headers">Headers</button><button id="copyResponse" class="copy">Copy</button></div><div id="error" role="alert" hidden></div><pre id="response">Your response will appear here.
+
+Choose a quick request or enter a URL, then select Send request.</pre></section>
+    <section class="history"><div class="card-heading"><h2>Recent requests</h2><button id="clearHistory" class="text-button">Clear</button></div><div id="historyList"><p class="hint">Your session history will appear here.</p></div></section>
+    <footer>REQUEST LAB <span>Small tools. Better workflows.</span></footer>
+  </main>
+</body></html>
