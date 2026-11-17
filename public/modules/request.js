@@ -1,7 +1,38 @@
+import { normalizeTags } from '../request-tags.js';
 import { $, showError, apiJson } from './ui.js';
 import { urlVariableNames, resolveRequestUrl, reconcileUrlVariables } from '../request-variables.js';
 
 export function initRequestEditor(getEnvironment) {
+  let tags = [];
+  function renderTags() {
+    $('requestTagList').replaceChildren();
+    for (const tag of tags) {
+      const chip = document.createElement('span'); chip.className = 'tag';
+      const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.setAttribute('aria-label', `Remove tag ${tag}`);
+      remove.onclick = () => { tags = tags.filter(value => value !== tag); renderTags(); };
+      chip.append(document.createTextNode(tag), remove); $('requestTagList').append(chip);
+    }
+  }
+  function commitTag() {
+    const value = $('requestTagInput').value;
+    if (!value) return;
+    try {
+      tags = normalizeTags([...tags, value]);
+      $('requestTagInput').value = ''; $('requestTagError').hidden = true;
+      $('requestTagInput').setAttribute('aria-invalid', 'false'); renderTags();
+    } catch (error) {
+      $('requestTagError').textContent = error.message; $('requestTagError').hidden = false;
+      $('requestTagInput').setAttribute('aria-invalid', 'true'); throw error;
+    }
+  }
+  function resetTags(values = []) {
+    tags = normalizeTags(values); $('requestTagInput').value = ''; $('requestTagError').hidden = true;
+    $('requestTagInput').setAttribute('aria-invalid', 'false'); renderTags();
+  }
+  $('addRequestTag').onclick = () => { try { commitTag(); } catch {} $('requestTagInput').focus(); };
+  $('requestTagInput').onkeydown = event => {
+    if (event.key === 'Enter') { event.preventDefault(); try { commitTag(); } catch {} }
+  };
   const history = [];
   let result = null;
   let responseView = 'body';
@@ -111,12 +142,18 @@ export function initRequestEditor(getEnvironment) {
     finally { $('send').disabled = false; $('send').textContent = 'Send request ↗'; }
   };
   function read() {
+    commitTag();
     const headers = JSON.parse($('headers').value || '{}');
     if (!headers || Array.isArray(headers) || typeof headers !== 'object' || Object.values(headers).some(value => typeof value !== 'string')) throw new Error('Headers must be a JSON object of strings');
     const fields = authFields[$('authType').value].map(([key]) => key);
-    return { version: 1, name: $('callName').value.trim(), method: $('method').value, url: $('url').value, headers, body: $('body').value, variables: requestVariables(), auth: { type: $('authType').value, values: Object.fromEntries(fields.map(key => [key, authValues[key]])) } };
+    return { version: 1, folderId: $('requestFolder').value || null, name: $('callName').value.trim(), method: $('method').value, url: $('url').value, headers, body: $('body').value, variables: requestVariables(), tags: [...tags], description: $('requestDescription').value, auth: { type: $('authType').value, values: Object.fromEntries(fields.map(key => [key, authValues[key]])) } };
   }
+  function setSavedId(id) { $('requestFilename').textContent = id ? `${id}.json` : 'Not saved yet'; }
   function load(call) {
+    setSavedId(call.id);
+    $('requestFolder').value = call.folderId || '';
+    $('requestDescription').value = call.description || '';
+    resetTags(call.tags || []);
     $('callName').value = call.name;
     $('method').value = call.method; $('url').value = call.url;
     $('headers').value = JSON.stringify(call.headers, null, 2); $('body').value = call.body;
@@ -168,8 +205,11 @@ export function initRequestEditor(getEnvironment) {
   $('addRequestVariable').onclick = () => addRequestVariable().focus();
 
   function preset({ method, label, path }) {
+    $('requestFolder').value = '';
+    setSavedId(null); $('requestDescription').value = '';
+    resetTags();
     $('callName').value = label; $('method').value = method; $('url').value = `{{baseUrl}}${path}`;
-    setRequestVariables({}); selectPanel(['POST', 'PUT', 'PATCH'].includes(method) ? 'bodyPanel' : 'headersPanel');
+    setRequestVariables({}); selectPanel(['POST', 'PUT', 'PATCH', 'QUERY'].includes(method) ? 'bodyPanel' : 'headersPanel');
   }
-  return { read, load, preset };
+  return { read, load, preset, setSavedId };
 }

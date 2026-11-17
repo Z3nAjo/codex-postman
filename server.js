@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { json } from './src/http.js';
 import { handleEnvironments } from './src/environments.js';
+import { handleFolders } from './src/folders.js';
 import { handleLibrary } from './src/library.js';
 import { handleRequest } from './src/proxy.js';
 import { serveStatic } from './src/static.js';
@@ -18,6 +19,7 @@ export function createServer({ callsDir = fileURLToPath(new URL('./calls/', impo
     const pathname = new URL(req.url, `http://${host}`).pathname;
     try {
       if (pathname === '/api/environments' || pathname.startsWith('/api/environments/')) return await handleEnvironments(req, res, pathname, environmentsDir);
+      if (pathname === '/api/folders') return await handleFolders(req, res, callsDir);
       if (pathname === '/api/calls' || pathname.startsWith('/api/calls/')) return await handleLibrary(req, res, pathname, callsDir);
       if (pathname === '/api/request' && req.method === 'POST') return await handleRequest(req, res);
       return await serveStatic(req, res, pathname, publicDir);

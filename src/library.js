@@ -1,3 +1,4 @@
+import { readFolders } from './folders.js';
 import { mkdir, readdir, readFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { json, readJson } from './http.js';
@@ -15,7 +16,7 @@ export async function handleLibrary(req, res, pathname, callsDir) {
     const names = (await readdir(callsDir)).filter(name => /^[a-zA-Z0-9_-]{1,150}\.json$/.test(name)).sort();
     const calls = [];
     for (const name of names) {
-      try { const call = validateCall(JSON.parse(await readFile(resolve(callsDir, name), 'utf8'))); calls.push({ id: name.slice(0, -5), name: call.name, method: call.method, url: call.url }); }
+      try { const call = validateCall(JSON.parse(await readFile(resolve(callsDir, name), 'utf8'))); calls.push({ id: name.slice(0, -5), name: call.name, method: call.method, url: call.url, tags: call.tags, folderId: call.folderId }); }
       catch { /* An invalid hand-edited file must not hide other saved calls. */ }
     }
     return json(res, 200, calls);
@@ -37,6 +38,7 @@ export async function handleLibrary(req, res, pathname, callsDir) {
   }
   if (parts[1] || (req.method === 'PUT' && !id) || (req.method === 'POST' && id)) return json(res, 405, { error: 'Method not allowed' });
   const call = validateCall(await readJson(req));
+  if (call.folderId && !(await readFolders(callsDir)).some(folder => folder.id === call.folderId)) throw new Error('Folder not found');
   if (req.method === 'PUT') {
     await updateJson(path, call);
     return json(res, 200, { ...call, id });

@@ -1,0 +1,13 @@
+{
+  "name": "Z3najo",
+  "variables": {
+    "subdomain": "https://z3najo.zendesk.com/api/v2",
+    "authorization": "mzaBJfGhYraSvWurWAxOBddubLwNEuxnLFNrLWzq",
+    "bearer_token": "62c001108b6f1a4ec5341559e99476e756887563c76b3f0ed15167ff18b144b3",
+    "sunco": "https://z3najo.zendesk.com/sc",
+    "apiVersion": "v2",
+    "keyId": "app_6862cf2f9bec671a67339d50",
+    "secret": "UhgNP7pjfVr1my6CigbMQ7eINjb_yDsze_t62kwHNkNpfZjxDxrJaV6xfk_BEEUsGfFYzWtrhbISNzEmUkkIbA",
+    "appId": "67a082aec1d01397a5be0357"
+  }
+}

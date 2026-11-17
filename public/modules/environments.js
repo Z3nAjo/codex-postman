@@ -11,6 +11,7 @@ export function initEnvironments() {
     const env = JSON.parse($('environment').value);
     if (!env || typeof env !== 'object' || !env.variables || Array.isArray(env.variables) || typeof env.variables !== 'object') throw new Error('Environment must contain a variables object');
     for (const [key, value] of Object.entries(env.variables)) if (!['string', 'number', 'boolean'].includes(typeof value)) throw new Error(`Environment variable ${key} must be a string, number, or boolean`);
+    env.variables = Object.fromEntries(Object.entries(env.variables).map(([key, value]) => [key, String(value)]));
     return env;
   }
   function environmentMessage(message = '') {
@@ -23,14 +24,10 @@ export function initEnvironments() {
       const variables = Object.create(null);
       for (const row of $('variableRows').children) {
         const key = row.querySelector('[data-key]').value.trim();
-        const type = row.querySelector('select').value;
         const raw = row.querySelector('[data-value]').value;
         if (!key) throw new Error('Every variable needs a key. Fill in or remove the empty row.');
         if (Object.hasOwn(variables, key)) throw new Error(`Duplicate variable key: ${key}`);
-        let value = raw;
-        if (type === 'number') { if (!raw.trim() || !Number.isFinite(Number(raw))) throw new Error(`Enter a valid number for ${key}`); value = Number(raw); }
-        if (type === 'boolean') { if (!['true', 'false'].includes(raw)) throw new Error(`Use true or false for ${key}`); value = raw === 'true'; }
-        variables[key] = value;
+        variables[key] = raw;
       }
       $('environment').value = JSON.stringify({ name: $('environmentLabel').value, variables }, null, 2);
       $('environmentName').textContent = `Environment: ${$('environmentLabel').value || 'Untitled'}`;
@@ -41,21 +38,19 @@ export function initEnvironments() {
   function addVariableRow(key = '', value = '') {
     const row = document.createElement('tr');
     const keyInput = document.createElement('input'); keyInput.dataset.key = ''; keyInput.value = key; keyInput.placeholder = 'variableName'; keyInput.setAttribute('aria-label', 'Variable key');
-    const type = document.createElement('select'); type.setAttribute('aria-label', 'Variable type');
-    for (const name of ['string', 'number', 'boolean']) { const option = document.createElement('option'); option.value = name; option.textContent = name; type.append(option); }
-    type.value = typeof value;
     const input = document.createElement('input'); input.dataset.value = ''; input.value = String(value); input.setAttribute('aria-label', 'Variable value'); input.autocomplete = 'off'; input.spellcheck = false;
-    input.type = /token|secret|password|api.?key/i.test(key) ? 'password' : 'text';
-    const reveal = document.createElement('button'); reveal.type = 'button'; reveal.className = 'text-button'; reveal.textContent = input.type === 'password' ? 'Show' : 'Hide'; reveal.setAttribute('aria-label', 'Toggle variable visibility');
-    reveal.onclick = () => { input.type = input.type === 'password' ? 'text' : 'password'; reveal.textContent = input.type === 'password' ? 'Show' : 'Hide'; };
-    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-button delete-call'; remove.textContent = 'Remove'; remove.onclick = () => { row.remove(); syncVariableRows(); };
-    for (const element of [keyInput, type, input]) {
+    input.type = 'text';
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-button delete-call remove-variable'; remove.setAttribute('aria-label', 'Remove variable'); remove.title = 'Remove variable';
+    remove.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>';
+    remove.onclick = () => { row.remove(); syncVariableRows(); };
+    for (const element of [keyInput, input]) {
       const cell = document.createElement('td');
-      if (element === type) { const wrapper = document.createElement('div'); wrapper.className = 'variable-type-select'; wrapper.append(element); cell.append(wrapper); }
-      else cell.append(element);
+      if (element === keyInput) {
+        const nameLine = document.createElement('div'); nameLine.className = 'variable-name-line'; nameLine.append(element, remove); cell.append(nameLine);
+      } else cell.append(element);
       row.append(cell); element.oninput = syncVariableRows;
     }
-    const actions = document.createElement('td'); actions.append(reveal, remove); row.append(actions); $('variableRows').append(row);
+    $('variableRows').append(row);
     return keyInput;
   }
   $('addVariable').onclick = () => { const input = addVariableRow(); syncVariableRows(); input.focus(); };
@@ -64,6 +59,7 @@ export function initEnvironments() {
     environmentMessage();
     try {
       const env = environment();
+      $('environment').value = JSON.stringify(env, null, 2);
       $('environmentLabel').value = env.name || '';
       $('variableRows').replaceChildren();
       for (const [key, value] of Object.entries(env.variables)) addVariableRow(key, value);
@@ -93,7 +89,7 @@ export function initEnvironments() {
   function validateEnvironment(env) {
     if (!env || typeof env !== 'object' || typeof env.name !== 'string' || !env.variables || Array.isArray(env.variables) || typeof env.variables !== 'object') throw new Error('Each environment needs a name and variables object');
     for (const value of Object.values(env.variables)) if (!['string', 'number', 'boolean'].includes(typeof value) || (typeof value === 'number' && !Number.isFinite(value))) throw new Error('Variable values must be strings, numbers, or booleans');
-    return { name: env.name, variables: structuredClone(env.variables) };
+    return { name: env.name, variables: Object.fromEntries(Object.entries(env.variables).map(([key, value]) => [key, String(value)])) };
   }
   function renderEnvironmentSelector() {
     $('activeEnvironment').replaceChildren();
@@ -199,11 +195,6 @@ export function initEnvironments() {
     $('environmentStorageWarnings').textContent = storage.warnings.join('\n');
     $('environmentStorageWarnings').hidden = !storage.warnings.length;
   }
-  $('refreshEnvironments').onclick = async () => {
-    if (environmentEditorError) return showError('Fix the current environment before refreshing.');
-    try { await environmentSaveQueue; await refreshEnvironments(); }
-    catch (error) { showError(error.message); $('environmentStorageWarnings').hidden = false; $('environmentStorageWarnings').textContent = error.message; }
-  };
   function queueEnvironmentSave(id, data) {
     $('environmentSaveStatus').textContent = 'Saving…';
     environmentSaveQueue = environmentSaveQueue.then(async () => {

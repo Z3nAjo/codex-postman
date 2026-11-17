@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "folderId": "b324ffd3-e570-4424-acbf-decf5b40ee85",
   "name": "test",
   "method": "GET",
   "url": "{{baseUrl}}/",
@@ -8,6 +9,10 @@
   },
   "body": "",
   "variables": {},
+  "tags": [
+    "toto"
+  ],
+  "description": "",
   "auth": {
     "type": "none",
     "values": {}

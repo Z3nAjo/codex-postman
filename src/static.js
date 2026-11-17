@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { json } from './http.js';
 
-const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/request-variables.js': ['request-variables.js', 'text/javascript'] };
-const modules = ['ui', 'request', 'library', 'environments', 'layout'];
+const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/style.css': ['style.css', 'text/css'], '/request-variables.js': ['request-variables.js', 'text/javascript'], '/request-tags.js': ['request-tags.js', 'text/javascript'] };
+const modules = ['ui', 'request', 'library', 'environments', 'layout', 'folders'];
 for (const name of modules) files[`/modules/${name}.js`] = [`modules/${name}.js`, 'text/javascript'];
 
 export async function serveStatic(req, res, pathname, publicDir) {

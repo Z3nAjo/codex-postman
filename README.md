@@ -16,7 +16,7 @@ Open http://localhost:3000. Change the port with `PORT=4000 npm start`.
 - Choose GET (read), POST (create), PUT/PATCH (update), or DELETE. The sidebar loads demo requests for JSONPlaceholder. Demo writes are simulated by that service, not persisted.
 - Enter a URL, JSON headers, and a raw or JSON body. The Content-Type header defaults to application/json; change it for other body types.
 - Under Authorization, select Bearer, Basic, or an API key header. Enter credentials directly or reference environment variables, such as `{{token}}`. Authorization settings override matching headers.
-- In the sidebar Environment section, edit the environment name and variable table. Add or remove rows, choose string/number/boolean types, and show or hide values. The raw JSON editor stays synchronized; you can also import a JSON file. Empty or duplicate keys and invalid typed values block sending until corrected. Variables work in URLs, header names/values, body text, and authentication fields. Body substitutions are literal text; escape JSON string values when needed. Missing variables produce an error.
+- In the sidebar Environment section, edit the environment name and variable table. Add rows or remove them with the trash icon beside the variable name. Values are always visible. All variable values are strings; legacy numeric and boolean values are converted to text when loaded or imported. The raw JSON editor stays synchronized; you can also import a JSON file. Empty or duplicate keys block sending until corrected. Variables work in URLs, header names/values, body text, and authentication fields. Body substitutions are literal text; escape JSON string values when needed. Missing variables produce an error.
 - Inspect response status, elapsed time, size, body, and headers. JSON responses are pretty-printed. Recent request templates stay in memory; click one to restore its method and URL.
 
 ```json
@@ -92,3 +92,17 @@ Editors expose small read/load interfaces rather than sharing mutable global sta
 ## Library export
 
 Quick requests, Library, and Environment use native collapsible headings. Library starts expanded; Environment starts collapsed. Select **Export all** inside Library to download `library.json`, containing `{ "version": 1, "requests": [...] }`. Each entry includes its saved name, method, URL, headers, body, authorization, and URL variables. This exports saved files rather than unsaved editor changes. Literal credentials in saved requests are included.
+
+## Request tags
+
+Use **Tags** in the **Info** request tab to add tags with Enter or **Add tag**. Tags accept letters (including Unicode letters), digits, underscores, and hyphens; whitespace and other punctuation are rejected. Duplicate tags are ignored. Use the × button to remove a tag. Save or update the request to persist changes. Tags appear in Library and are retained by save, load, duplicate, import, individual export, and library export. Older requests default to an empty tag list. Tags are metadata and are not sent to the API.
+
+The **Info** request tab also contains a description and the actual saved JSON filename. Unsaved requests display “Not saved yet”; saving, loading, and duplicating update the filename. Renaming a saved request keeps its original filename. Descriptions are saved and included in duplication, import, and both export formats; older requests default to an empty description.
+
+Quick requests includes GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, and QUERY. QUERY supports a request body and is also available in the method selector, saved requests, and exports. Use an API that implements QUERY; the public demo API may reject methods it does not support. The Library actions dropdown uses a native popover invoker, so the same ⋯ button toggles it closed while outside clicks and Escape also dismiss it.
+
+### Library folders
+
+Use **Library → ⋯ → New folder** to create a top-level folder. Folders collapse independently and offer **⋯ → New request** with the folder preselected. Choose a folder in a request’s **Info** tab and save, or use its Library **⋯ → Move to folder** action to move it immediately. Choose **No folder** to return a request to the root. Search includes requests inside collapsed folders.
+
+Requests remain individual JSON files with an optional `folderId`. Folder records live in `calls/.folders.json` with stable IDs and a reserved `parentId` (currently always null); nested folders are rejected for now. Library exports include folder records, and importing a Library bundle restores folder membership. Older requests without a folder remain at the root.
